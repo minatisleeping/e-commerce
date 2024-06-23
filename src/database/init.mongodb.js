@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const { env } = require('../configs/environment')
 const { countConnection } = require('../helpers/check.connect')
 
-const connectString = `mongodb+srv://${env.USERNAME}:${env.PASSWORD}@cluster0.m14vgac.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+const connectString = `mongodb+srv://${env.USERNAME}:${env.PASSWORD}@${env.CLUSTER}`
 
 class Database {
   constructor() {
@@ -16,7 +16,7 @@ class Database {
       mongoose.set('debug', true)
       mongoose.set('debug', { color: true })
     }
-
+    
     mongoose.connect(connectString, { maxPoolSize: 50 })
     .then(_=> console.log('Connected to MongoDB successfully!', countConnection()))
     .catch(err => console.error('Error connecting to MongoDB: ', err))

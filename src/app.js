@@ -11,8 +11,9 @@ app.use(compression())
 
 // init db
 require('./database/init.mongodb')
-const { checkOverload } = require('./helpers/check.connect')
-checkOverload()
+// const { countConnection, checkOverload } = require('./helpers/check.connect')
+// countConnection()
+// checkOverload()
 // init routes
 app.get('/', (req, res, next) => {
   return res.status(200).json({ message: 'hello tips js' })
