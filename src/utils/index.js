@@ -6,6 +6,4 @@ const getInfoData = ({ fields = [], object = {} }) => {
   return _.pick(object, fields)
 }
 
-module.exports = {
-  getInfoData
-}
+module.exports = { getInfoData }

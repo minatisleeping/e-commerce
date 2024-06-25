@@ -1,28 +1,30 @@
 'use strict'
 const JWT = require('jsonwebtoken')
 
-const createTokenPair = async (payload, publicKey, privateKey) => {
+const createTokenPair = async ( payload, publicKey, privateKey) => {
   try {
-    // accessToken
-    const [accessToken, refreshToken] = await Promise.all([
-      JWT.sign(payload, privateKey, { expiresIn: '2 days', algorithm: 'RS256' }),
-      JWT.sign(payload, privateKey, { expiresIn: '7 days', algorithm: 'RS256' })
-    ])
-    console.log('🚀 ~ accessToken:', accessToken)
-    console.log('🚀 ~ refreshToken:', refreshToken)
+    // access token
+    const accessToken = await JWT.sign(payload, privateKey, {
+      algorithm: 'RS256', expiresIn: '1 days'
+    })
 
-    JWT.verify(accessToken, publicKey, (err, decoded) => {
+    // refresh token
+    const refreshToken = await JWT.sign(payload, privateKey, {
+      algorithm: 'RS256', expiresIn: '2 days'
+    })
+
+    // verify key
+    JWT.verify(accessToken, publicKey, (err, decode) => {
       if (err) {
-        throw new Error('Invalid accessToken')
+        console.error(`error verify:: `, err)
       } else {
-        console.log('🚀 ~ decoded verify:', decoded)
+        console.log('decode verify::', decode)
       }
     })
 
     return { accessToken, refreshToken }
-  } catch (error) { console.log('🚀 ~ error:', error) }
+  } catch (error) {
+      console.error(`createTokenPair error:: `, error)
+  }
 }
-
-module.exports = {
-  createTokenPair
-}
+module.exports = { createTokenPair }

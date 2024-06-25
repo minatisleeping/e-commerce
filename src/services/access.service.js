@@ -6,6 +6,8 @@ const crypto = require('crypto')
 const KeyTokenService = require('./keyToken.service')
 const { createTokenPair } = require('../auth/authUtils')
 const { getInfoData } = require('../utils')
+const { StatusCodes } = require('http-status-codes')
+const { STATUS_CODES } = require('http')
 
 const RoleShop = {
   SHOP: 'SHOP',
@@ -13,86 +15,81 @@ const RoleShop = {
   EDITOR: 'EDIT',
   ADMIN: 'ADMIN'
 }
-
 class AccessService {
-  static signUp = async ({ name, email, password }) => {
+  static signUp = async ({name, email, password}) => {
     try {
-      // step1: check email exist
-      const holderShop = await shopModel.findOne({ email }).lean()
-      
-      if (holderShop) {
-        return {
-          code: 'xxxx',
-          message: 'Shop already register!'
-        }
-      }
-
-      const passwordHashed = await bcrypt.hash(password, 10)
-      const newShop = await shopModel.create({
-        name,
-        email,
-        password: passwordHashed,
-        roles: [RoleShop.SHOP]
-      })
-
-      if (newShop) {
-        // created privateKey, publicKey
-        const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-          modulusLength: 4096,
-          publicKeyEncoding: { type: 'pkcs1', format: 'pem' },
-          privateKeyEncoding: { type: 'pkcs1', format: 'pem' }
-        })
-
-        // const privateKey = crypto.randomBytes(64).toString('hex')
-        // const publicKey = crypto.randomBytes(64).toString('hex')
-        console.log({ privateKey, publicKey })
-
-        const publicKeyString = await KeyTokenService.createKeyToken({
-          userId: newShop._id,
-          publicKey
-          // ,privateKey
-        })
-        
-        if (!publicKeyString) {
+        // step1: Check email exists?
+        const holderShop = await shopModel.findOne({email}).lean()
+        if (holderShop) {
           return {
             code: 'xxxx',
-            message: 'Error publicKey!'
+            message: 'Shop already registered'
           }
         }
 
+        const passwordHash = await bcrypt.hash(password, 10)
+        const newShop = await shopModel.create({
+          name, email, password: passwordHash, roles: [RoleShop.SHOP]
+        })
 
-        // const publicKeyObject = crypto.createPublicKey(publicKeyString)
-        // console.log('🚀 ~ publicKeyObject:', publicKeyObject)
-        
-        const tokens = await createTokenPair(
-          { userId: newShop._id, email },
-          publicKey,
-          privateKey
-        )
-        console.log('🚀 ~ tokens:', tokens)
-        
+        if (newShop) {
+          // create private key, public key
+          const { publicKey, privateKey, } = crypto.generateKeyPairSync('rsa', {
+            modulusLength: 4096,
+            publicKeyEncoding: { type: 'pkcs1', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs1', format: 'pem' }
+          })
+          console.log(privateKey, '---', publicKey)
+
+          const publicKeyString = await KeyTokenService.createKeyToken({
+            userId: newShop._id,
+            publicKey: publicKey.toString(),
+            privateKey: privateKey.toString(),
+          })
+
+          if (!publicKeyString) {
+            return {
+              code: 'xxx',
+              message: 'publicKeyString error'
+            }
+          }
+          console.log('publicKeyString:: ', publicKeyString)
+
+          // create pub
+          const publicKeyObject  = await crypto.createPublicKey(publicKeyString)
+          console.log('publicKeyObject:: ', publicKeyObject)
+
+          // created token pair
+          const tokens = await createTokenPair(
+            { userId: newShop._id, email },
+            publicKeyObject,
+            privateKey
+          )
+
+          console.log('Created token success:: ', tokens)
+
+          return {
+            code: StatusCodes.CREATED,
+            metaData: {
+              shop: getInfoData({ object: newShop, fields: ['_id', 'name', 'email'] }),
+              tokens
+            }
+          }
+        }
+
         return {
-          code: 201,
-          metadata: {
-            shop: getInfoData({ object: newShop, fields: ['_id', 'name', 'email'] }),
-            tokens
-          }
+          code: StatusCodes.OK,
+          metaData: null
         }
-      }
-
-      return {
-        code: 201,
-        metadata: null
-      }
-    } catch (error) {
-      return {
-        code: 'xxx',
-        message: error.message,
-        status: 'error'
-      }
+    } catch(error) {
+        console.error(`signUp:: `, error)
+        return {
+            code: '',
+            message: error.message,
+            status: 'error'
+        }
     }
   }
 }
 
 module.exports = AccessService
-
