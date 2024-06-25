@@ -2,29 +2,32 @@
 
 const { Schema, model } = require('mongoose')
 
+
 const DOCUMENT_NAME = 'Key'
 const COLLECTION_NAME = 'Keys'
 
-// Declare the Schema of the Mongo model
-var keyTokenSchema = Schema({
+const keyTokenSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'Shop',
-  },
-  privateKey: {
-    type: String, required: true
+    trim: true,
+    ref: 'Shop'
   },
   publicKey: {
-    type: String, required: true
+    type: String,
+    trim: true
+  },
+  privateKey: {
+    type: String,
+    trim: true
   },
   refreshToken: {
-    type: Array, default: []
-  },
-}, {
-  collection: COLLECTION_NAME,
-  timestamps: true
+    type: Array,
+    default: []
+  }
+},{
+  timestamps: true,
+  collection: COLLECTION_NAME
 })
 
-//Export the model
+
 module.exports = model(DOCUMENT_NAME, keyTokenSchema)
