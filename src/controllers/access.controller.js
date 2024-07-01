@@ -4,6 +4,14 @@ const AccessService = require('../services/access.service')
 const { StatusCodes } = require('http-status-codes')
 
 class AccessController {
+  handlerRefreshToken = async (req, res, next) => {
+    const result = await AccessService.handlerRefreshToken(req.body.refreshToken)
+    return res.status(StatusCodes.OK).json({
+      message: 'Get token success!',
+      result
+    })
+  }
+
   logout = async (req, res, next) => {
     const result = await AccessService.logout(req.keyStore)
     return res.status(StatusCodes.OK).json({

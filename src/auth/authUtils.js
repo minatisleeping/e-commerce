@@ -69,4 +69,8 @@ const authentication = wrapAsync(async (req, res, next) => {
   } catch (error) { throw error }
 })
 
-module.exports = { createTokenPair, authentication }
+const verifyJWT = (token, keySecret) => {
+  return JWT.verify(token, keySecret)
+}
+
+module.exports = { createTokenPair, authentication, verifyJWT }
