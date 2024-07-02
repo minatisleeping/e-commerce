@@ -4,12 +4,20 @@ const AccessService = require('../services/access.service')
 const { StatusCodes } = require('http-status-codes')
 
 class AccessController {
-  handlerRefreshToken = async (req, res, next) => {
-    const result = await AccessService.handlerRefreshToken(req.body.refreshToken)
+  handlerRefreshTokenV2 = async (req, res, next) => {
+    // const result = await AccessService.handlerRefreshToken(req.body.refreshToken)
+    // return res.status(StatusCodes.OK).json({
+    //   message: 'Get token success!',
+    //   result
+    // })
+    
+    // v2 -> fix: no need accessToken
+    const result = await AccessService.handlerRefreshTokenV2({ refreshToken: req.refreshToken, user: req.user, keyStore: req.keyStore })
     return res.status(StatusCodes.OK).json({
       message: 'Get token success!',
-      result
+      metaData: result
     })
+
   }
 
   logout = async (req, res, next) => {

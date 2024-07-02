@@ -17,6 +17,31 @@ const RoleShop = {
   ADMIN: 'ADMIN'
 }
 class AccessService {
+  static handlerRefreshTokenV2 = async ({ keyStore, user, refreshToken }) => {
+    const { userId, email } = user
+
+    if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeyById(userId)
+      throw new ForbiddenError('Something wrong happened! Please login again!')
+    }
+
+    if (keyStore.refreshToken !== refreshToken) throw new AuthFailureError('Shop not registered!')
+
+    const foundShop = await findByEmail({ email })
+    if (!foundShop) throw new AuthFailureError('Shop not registered!')
+
+    // create pair token
+    const tokens = await createTokenPair({ userId, email }, keyStore.publicKey, keyStore.privateKey)
+
+    //update token
+    await keyStore.update({
+      $set: { refreshToken: tokens.refreshToken },
+      $addToSet: { refreshTokensUsed: refreshToken }
+    })
+
+    return { user, tokens }
+  }
+
   static handlerRefreshToken = async (refreshToken) => {
     const foundToken = await KeyTokenService.findByRefreshTokenUsed(refreshToken)
     if (foundToken) {
