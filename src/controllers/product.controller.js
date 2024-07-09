@@ -28,6 +28,23 @@ class ProductController {
       metaData: result
     })
   }
+
+  /**
+   * @description: Get all drafts for shop
+   * @param { Number } limit
+   * @param { Number } skip
+   * @returns { JSON }
+   */
+  getAllDraftsForShop = async (req, res, next) => {
+    const result = await ProductServiceV2.findAllDraftsForShop({
+      product_shop: req.user.userId
+    })
+
+    return res.status(StatusCodes.OK).json({
+      message: 'Get all drafts list success!',
+      metaData: result
+    })
+  }
 }
 
 module.exports = new ProductController()

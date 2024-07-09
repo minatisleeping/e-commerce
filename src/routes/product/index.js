@@ -10,6 +10,9 @@ const { authenticationV2 } = require('../../auth/authUtils')
 router.use(authenticationV2)
 
 //logout
-router.post('', wrapAsync(ProductController.createProduct))
+router.post('', wrapAsync(ProductController.createProductV2))
+
+//query
+router.get('/drafts/all', wrapAsync(ProductController.getAllDraftsForShop))
 
 module.exports = router
