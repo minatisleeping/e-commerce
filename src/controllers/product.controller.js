@@ -101,6 +101,24 @@ class ProductController {
       metaData: result
     })
   }
+
+  findAllProducts = async (req, res, next) => {
+    const result = await ProductServiceV2.findAllProducts(req.query)
+
+    return res.status(StatusCodes.OK).json({
+      message: 'Get list find all product success!',
+      metaData: result
+    })
+  }
+
+  findProduct = async (req, res, next) => {
+    const result = await ProductServiceV2.findProduct({ product_id: req.params.product_id })
+
+    return res.status(StatusCodes.OK).json({
+      message: 'Get product success!',
+      metaData: result
+    })
+  }
 }
 
 module.exports = new ProductController()

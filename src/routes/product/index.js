@@ -7,6 +7,8 @@ const { wrapAsync } = require('../../helpers/wrapAsync')
 const { authenticationV2 } = require('../../auth/authUtils')
 
 router.get('/search/:keySearch', wrapAsync(ProductController.getListSearchProduct))
+router.get('', wrapAsync(ProductController.findAllProducts))
+router.get('/:product_id', wrapAsync(ProductController.findProduct))
 
 // authentication
 router.use(authenticationV2)
