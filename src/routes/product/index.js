@@ -15,6 +15,7 @@ router.use(authenticationV2)
 
 //logout
 router.post('', wrapAsync(ProductController.createProductV2))
+router.patch('/:productId', wrapAsync(ProductController.updateProduct))
 router.post('/publish/:id', wrapAsync(ProductController.publishProductByShop))
 router.post('/unpublish/:id', wrapAsync(ProductController.unPublishProductByShop))
 
