@@ -29,6 +29,20 @@ class ProductController {
     })
   }
 
+  updateProduct = async (req, res, next) => {
+    const { product_type } = req.body
+    const { productId }    = req.params
+    const result = await ProductServiceV2.updateProduct(product_type, productId, {
+      ...req.body,
+      product_shop: req.user.userId
+    })
+
+    return res.status(StatusCodes.OK).json({
+      message: 'Update Product success!',
+      metaData: result
+    })
+  }
+
   publishProductByShop = async (req, res, next) => {
     const result = await ProductServiceV2.publishProductByShop({
       product_shop: req.user.userId,
