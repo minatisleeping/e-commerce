@@ -1,8 +1,10 @@
 'use strict'
 
-const { BadRequestError } = require('../core/error.response')
+const { BadRequestError, NotFoundError } = require('../core/error.response')
 const { discount } = require('../models/discount.model')
+const { findAllProducts } = require('../models/repositories/product.repo')
 const { convertToObjectId } = require('../utils')
+
 
 /**
  ** Discount Service
@@ -59,6 +61,42 @@ class DiscountService {
       discount_is_active: is_active,
       discount_applies_to: applies_to,
       discount_product_ids: applies_to === 'all'? [] : product_ids
+    })
+  }
+
+  static async updateDiscountCode() {}
+
+  //* Get all discount codes available with products
+  static async getAllDiscountCodesWithProduct({
+    code, shopId, userId, limit, page
+  }) {
+    const foundDiscount = await discount.findOne({
+      discount_code: code,
+      discount_shopId: convertToObjectId(shopId)
+    }).lean()
+
+    if (!foundDiscount || !foundDiscount.discount_is_active) {
+      throw new NotFoundError('Discount code not found!')
+    }
+
+    const { discount_applies_to, discount_product_ids } = foundDiscount
+    let filter
+    if (discount_applies_to === 'all') {
+        // get all
+        filter = { product_shop: convertToObjectId(shopId), isPublished: true }
+    }
+
+    if (discount_applies_to === 'specific') {
+      // get by product ids
+      filter = { _id: { $in: discount_product_ids }, isPublished: true }
+    }
+
+    return await findAllProducts({
+        filter,
+        limit: +limit,
+        page: +page,
+        sort: 'ctime',
+        select: ['product_name']
     })
   }
 }
