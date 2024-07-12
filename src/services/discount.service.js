@@ -2,7 +2,7 @@
 
 const { BadRequestError, NotFoundError } = require('../core/error.response')
 const { discount } = require('../models/discount.model')
-const { findAllDiscountCodesSelect, findAllDiscountCodesUnSelect } = require('../models/repositories/discount.repo')
+const { findAllDiscountCodesSelect, findAllDiscountCodesUnSelect, checkDiscountExists } = require('../models/repositories/discount.repo')
 const { findAllProducts } = require('../models/repositories/product.repo')
 const { convertToObjectId } = require('../utils')
 
@@ -102,7 +102,7 @@ class DiscountService {
   }
 
   static async getAllDiscountCodesByShop({ limit, page, shopId }) {
-    const discounts = await findAllDiscountCodesUnSelect({
+    return await findAllDiscountCodesUnSelect({
       limit: +limit,
       page: +page,
       filter: {
@@ -112,7 +112,59 @@ class DiscountService {
       unSelect: ['__v', 'discount_shopId'],
       model: discount
     })
+  }
 
-    return discounts
+  static async getDiscountAmount({ codeId, userId, shopId, products }) {
+    const foundDiscount = await checkDiscountExists({
+      model: discount,
+      filter: {
+        _id: convertToObjectId(codeId),
+        discount_shopId: convertToObjectId(shopId)
+      }
+    })
+
+    if (!foundDiscount) throw new NotFoundError('Discount code not found!')
+
+    const {
+      discount_is_active,
+      discount_max_uses,
+      discount_start_day,
+      discount_end_day,
+      discount_min_order_value,
+      discount_max_uses_per_user,
+      discount_users_used,
+      discount_type,
+      discount_value
+    } = foundDiscount
+    if (!discount_is_active) throw new NotFoundError('Discount code has expired!')
+    if (!discount_max_uses) throw new NotFoundError('Discount are out!')
+
+    if (new Date() < new Date(discount_start_day) || new Date() > new Date(discount_end_day)) {
+      throw new BadRequestError('Discount code has expired!')
+    }
+
+    // check xem có giá trị tối thiểu hong
+    let totalOrder = 0
+    if (discount_min_order_value > 0) {
+      totalOrder = products.reduce((acc, cur) => {
+        return acc + (cur.quantity * cur.price)
+      }, 0)
+
+      if (totalOrder < discount_min_order_value) {
+        throw new BadRequestError(`Discount require minimum order value of ${discount_min_order_value}!`)
+      }
+    }
+
+    if (discount_max_uses_per_user > 0) {
+      const userDiscount = discount_users_used.find(user => user.userId === userId)
+      if (userDiscount) {
+        // ..
+      }
+    }
+
+    // check xem discount này là fixed hay percentage
+    const amount = discount_type === 'fixed_amount' ? discount_value : (totalOrder * discount_value) / 100
+
+    return { totalOrder, discount: amount, totalPrice: totalOrder - amount }
   }
 }
