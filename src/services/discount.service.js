@@ -167,4 +167,12 @@ class DiscountService {
 
     return { totalOrder, discount: amount, totalPrice: totalOrder - amount }
   }
+
+  static async deleteDiscountCode({ shopId, codeId }) {
+    // check xem có được sử dụng ở đâu hong, nếu k thì xóa
+    return await discountModel.findOneAndDelete({
+      discount_code: codeId,
+      discount_shop_id: convertToObjectId(shopId)
+    })
+  }
 }
