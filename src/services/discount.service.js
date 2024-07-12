@@ -2,6 +2,7 @@
 
 const { BadRequestError, NotFoundError } = require('../core/error.response')
 const { discount } = require('../models/discount.model')
+const { findAllDiscountCodesSelect, findAllDiscountCodesUnSelect } = require('../models/repositories/discount.repo')
 const { findAllProducts } = require('../models/repositories/product.repo')
 const { convertToObjectId } = require('../utils')
 
@@ -82,8 +83,8 @@ class DiscountService {
     const { discount_applies_to, discount_product_ids } = foundDiscount
     let filter
     if (discount_applies_to === 'all') {
-        // get all
-        filter = { product_shop: convertToObjectId(shopId), isPublished: true }
+      // get all products
+      filter = { product_shop: convertToObjectId(shopId), isPublished: true }
     }
 
     if (discount_applies_to === 'specific') {
@@ -98,5 +99,20 @@ class DiscountService {
         sort: 'ctime',
         select: ['product_name']
     })
+  }
+
+  static async getAllDiscountCodesByShop({ limit, page, shopId }) {
+    const discounts = await findAllDiscountCodesUnSelect({
+      limit: +limit,
+      page: +page,
+      filter: {
+        discount_shopId: convertToObjectId(shopId),
+        discount_is_active: true
+      },
+      unSelect: ['__v', 'discount_shopId'],
+      model: discount
+    })
+
+    return discounts
   }
 }
