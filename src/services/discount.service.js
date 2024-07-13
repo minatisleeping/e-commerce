@@ -2,33 +2,32 @@
 
 const { BadRequestError, NotFoundError } = require('../core/error.response')
 const { discount } = require('../models/discount.model')
-const { findAllDiscountCodesSelect, findAllDiscountCodesUnSelect, checkDiscountExists } = require('../models/repositories/discount.repo')
+const { findAllDiscountCodesUnSelect, checkDiscountExists } = require('../models/repositories/discount.repo')
 const { findAllProducts } = require('../models/repositories/product.repo')
 const { convertToObjectId } = require('../utils')
-
 
 /**
  ** Discount Service
  * 1 - Generate discount code [Shop | Admin]
- * 2 - Get discount amount    [User]
- * 3 - Get all discount codes [User | Shop]
- * 4 - Verify discount code   [User]
+ * 2 - Get discount amount    [User        ]
+ * 3 - Get all discount codes [User | Shop ]
+ * 4 - Verify discount code   [User        ]
  * 5 - Delete discount code   [Shop | Admin]
- * 6 - Cancel discount code   [User]
+ * 6 - Cancel discount code   [User        ]
  */
 
 class DiscountService {
   static async createDiscountCode(payload) {
     const {
-      code, start_date, end_date, is_active,
+      code, start_date, end_date, is_active, users_used,
       shopId, min_order_value, product_ids, applies_to, name, description,
       type, value, max_value, max_uses, uses_count, max_uses_per_user
     } = payload
 
     // validate
-    if (new Date() > new Date(start_date) || new Date() > new Date(end_date)) {
-      throw new BadRequestError('Discount code has expired!')
-    }
+    // if (new Date() >= new Date(end_date)) {
+    //   throw new BadRequestError('Discount code has expired!')
+    // }
 
     if (new Date(start_date) >= new Date(end_date)) {
       throw new BadRequestError('Start date must be less than end date!')
@@ -57,7 +56,7 @@ class DiscountService {
       discount_max_uses: max_uses,
       discount_uses_count: uses_count,
       discount_users_used: users_used,
-      discount_shop_id: shopId,
+      discount_shopId: shopId,
       discount_max_uses_per_user: max_uses_per_user,
       discount_is_active: is_active,
       discount_applies_to: applies_to,
@@ -175,4 +174,26 @@ class DiscountService {
       discount_shop_id: convertToObjectId(shopId)
     })
   }
+
+  static async cancelDiscountCode({ codeId, shopId, userId, }) {
+    const foundDiscount = await checkDiscountExists({
+      model: discount,
+      filter: {
+        discount_code: codeId,
+        discount_shopId: convertToObjectId(shopId)
+      }
+    })
+
+    if (!foundDiscount) throw new NotFoundError('Discount code not found!')
+
+    return await discount.findByIdAndUpdate(foundDiscount._id, {
+      $pull: { discount_users_used: { userId } } ,
+      $inc: {
+        discount_max_uses: 1, // increase max uses
+        discount_uses_count: -1 // decrease uses count
+      }
+    } )
+  }
 }
+
+module.exports = DiscountService
