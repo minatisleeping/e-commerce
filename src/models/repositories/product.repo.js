@@ -2,7 +2,7 @@
 
 const { product, electronic, clothing, furniture } = require('../../models/product.model')
 const { Types } = require('mongoose')
-const { getInfoData, getUnSelectData } = require('../../utils')
+const { getInfoData, getUnSelectData, convertToObjectId } = require('../../utils')
 
 const findAllDraftsForShop = async ({ query, limit, skip }) => {
   return await queryProduct({ query, limit, skip })
@@ -83,6 +83,10 @@ const queryProduct = async ({ query, limit, skip }) => {
     // .exec() // optional: return a Promise - cụm từ đại diện cho dùng async/await
 }
 
+const getProductById = async (productId) => {
+  return await product.findOne({ _id: convertToObjectId(productId) }).lean()
+}
+
 module.exports = {
   findAllDraftsForShop,
   publishProductByShop,
@@ -91,5 +95,6 @@ module.exports = {
   searchProductByUser,
   findAllProducts,
   findProduct,
-  updateProductById
+  updateProductById,
+  getProductById
 }
