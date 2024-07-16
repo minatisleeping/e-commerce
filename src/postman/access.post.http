@@ -3,10 +3,10 @@
 ###! Sign Up
 POST {{host_v1}}/shop/sign-up
 Content-Type: application/json
-x-api-key: 3ba8fbbf13982bee14091b983122483a69a6127d49bcbdf252a7e0f0ea8570823f4b0790d88099fc2d39f351ffb61bad5bbcf2aaa9ce17a59241b8ef5ca644b4
+x-api-key: asdasacads
 
 {
   "name": "Shop minat",
-  "email": "minatshop05@gmail.com",
+  "email": "minatdev@gmail.com",
   "password": "123456"
 }

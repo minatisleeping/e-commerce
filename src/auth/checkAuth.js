@@ -1,4 +1,5 @@
 'use strict'
+
 const { StatusCodes } = require('http-status-codes')
 const { findById } = require('../services/apikey.service')
 
@@ -26,13 +27,13 @@ const apiKey = async (req, res, next) => {
   } catch (error) {}
 }
 
-const permission = ( permission ) => {
+const permission = ( permissions ) => {
   return (req, res, next) => {
     if (!req.objKey.permissions) {
       return res.status(StatusCodes.FORBIDDEN).json({ message: 'Permission denied!' })
     }
     console.log('🚀 ~ permissions:', req.objKey.permissions)
-    const validPermission = req.objKey.permissions.includes(permission)
+    const validPermission = req.objKey.permissions.includes(permissions)
 
     if (!validPermission) {
       return res.status(StatusCodes.FORBIDDEN).json({ message: 'Permission denied!' })
